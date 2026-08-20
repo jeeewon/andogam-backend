@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    generate-ddl: true
+    show-sql: false
+
+# 로컬 개발 때는 application-API-KEY.properties(파일)로 관리했지만,
+# 운영 환경에서는 파일을 서버에 직접 올리지 않고 환경변수로 주입한다.
+api-odsay-key: ${ODSAY_API_KEY}

@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    # MySQL 8 기본 인증 방식(caching_sha2_password)이 일부 JDBC 드라이버 버전과
+    # 바로 호환 안 될 수 있어서, 더 널리 호환되는 방식으로 명시한다.
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: AndogamDB
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # depends_on의 기본 동작은 "컨테이너가 시작됐는지"만 보고 "연결을 받을 준비가 됐는지"는
+    # 안 본다. healthcheck로 진짜 준비 상태를 확인해서, app이 그걸 기다리게 한다.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ./Andogam
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: AndogamDB
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ODSAY_API_KEY: ${ODSAY_API_KEY}
+
+volumes:
+  mysql_data:
